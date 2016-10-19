@@ -22,6 +22,21 @@ def list_files(gauth, trashed):
         file_list = drive.ListFile({'q': 'trashed=false'}).GetList()
     return file_list
 
+# Retrieves version information in JSON format of previous versions
+# given a file ID
+def get_file_versions(fileID, gauth):
+    http = gauth[1]
+    url = "https://www.googleapis.com/drive/v3/files/" + fileID + "/revisions"
+    req = http.request(url, 'GET')
+
+    print req[1]
+    res = json.loads(req[1])
+    print "\n\n" + res["revisions"][0]["id"]
+    print len(res["revisions"])
+
+# Download files from drive
+# TODO
+
 def main():
     output_file = open('file_list.txt', 'w')
     trashed_output_file = open('trashed_file_list.txt', 'w')
