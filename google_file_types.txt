@@ -1,0 +1,15 @@
+application/vnd.google-apps.audio,.mp3,audio/mpeg
+application/vnd.google-apps.document,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document
+application/vnd.google-apps.drawing,.jpeg,image/jpeg
+application/vnd.google-apps.file,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document
+application/vnd.google-apps.folder,None,None
+application/vnd.google-apps.form,None,None
+application/vnd.google-apps.fusiontable,None,None
+application/vnd.google-apps.map,None,None
+application/vnd.google-apps.photo,.jpeg,image/jpeg
+application/vnd.google-apps.presentation,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation
+application/vnd.google-apps.script,.json,application/json
+application/vnd.google-apps.sites,None,None
+application/vnd.google-apps.spreadsheet,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+application/vnd.google-apps.unknown,None,None
+application/vnd.google-apps.video,.mp4,video/mp4
