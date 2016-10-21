@@ -7,7 +7,6 @@ import httplib2
 import json
 import datetime
 import os
-import re
 
 # Handles authentication
 def auth():
@@ -98,7 +97,6 @@ def download_files(gauth, httpauth, file_list, path):
     for down_file in file_list:
         if check_revisions(httpauth, down_file['id']):
             if 'google-apps' in down_file['mimeType']:
-                print("Google Apps Document")
                 value = gdrive_file_type[down_file['mimeType']]
                 if value[0] != 'None':
                     print("Downloading " + down_file['title'] + "...")
@@ -115,7 +113,6 @@ def download_files(gauth, httpauth, file_list, path):
                 download_revisions(httpauth, down_file['id'], down_file['title'], path)
         else:
             if 'google-apps' in down_file['mimeType']:
-                print("Google Apps Document")
                 value = gdrive_file_type[down_file['mimeType']]
                 if value[0] != 'None':
                     print("Downloading " + down_file['title'] + "...")
