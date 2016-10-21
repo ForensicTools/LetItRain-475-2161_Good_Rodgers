@@ -7,6 +7,7 @@ import httplib2
 import json
 import datetime
 import os
+import re
 
 # Handles authentication
 def auth():
@@ -33,6 +34,16 @@ def list_files(gauth, trashed):
         print("Retrieving list of regular files...")
         file_list = drive.ListFile({'q': 'trashed=false'}).GetList()
     return file_list
+
+# makes the hashmap that determines file type to download when file is a
+# Google-apps file
+def make_hash_map():
+    file1 = open('google_file_types.txt', 'r')
+    file_types = dict()
+    for line in file1:
+        attribute_list = line.strip().split(',')
+        file_types[attribute_list[0]] = [attribute_list[1], attribute_list[2]]
+    return file_types
 
 # Retrieves version information in JSON format of previous versions
 # given a file ID
@@ -68,18 +79,54 @@ def check_revisions(gauth, fileID):
     except:
         return False
 
+# sanitizes name to get rid of duplicates
+def sanitize_name(name):
+    name = name.replace('/', '_')
+    name = name.replace(':', '_')
+    name = name.replace('*', '_')
+    name = name.replace('?', '_')
+    name = name.replace('\\', '_')
+    name = name.replace('|', '_')
+    name = name.replace('<', '_')
+    new_name = name.replace('>', '_')
+    return new_name
+
 # Download files from drive when given the fileID
 def download_files(gauth, httpauth, file_list, path):
     drive = GoogleDrive(gauth)
+    gdrive_file_type = make_hash_map()
     for down_file in file_list:
         if check_revisions(httpauth, down_file['id']):
             if 'google-apps' in down_file['mimeType']:
                 print("Google Apps Document")
+                value = gdrive_file_type[down_file['mimeType']]
+                if value[0] != 'None':
+                    print("Downloading " + down_file['title'] + "...")
+                    url = "https://www.googleapis.com/drive/v3/files/{}/export?mimeType={}".format(down_file['id'], value[1])
+                    response, content = httpauth.request(url, 'GET')
+                    print(down_file['title'])
+                    name = sanitize_name(down_file['title'])
+                    with open(path + "/google/" + name + value[0], "wb") as saved_file:
+                        saved_file.write(content)
+                else:
+                    print("No file downloaded...")
+                    pass
             else:
                 download_revisions(httpauth, down_file['id'], down_file['title'], path)
         else:
             if 'google-apps' in down_file['mimeType']:
                 print("Google Apps Document")
+                value = gdrive_file_type[down_file['mimeType']]
+                if value[0] != 'None':
+                    print("Downloading " + down_file['title'] + "...")
+                    url = "https://www.googleapis.com/drive/v3/files/{}/export?mimeType={}".format(down_file['id'], value[1])
+                    response, content = httpauth.request(url, 'GET')
+                    name = sanitize_name(down_file['title'])
+                    with open(path + "/google/" + name + value[0], "wb") as saved_file:
+                        saved_file.write(content)
+                else:
+                    print("No file downloaded...")
+                    pass
             else:
                 print("Downloading " + down_file['title'] + "...")
                 url = "https://www.googleapis.com/drive/v3/files/{}?alt=media".format(down_file['id'])
@@ -97,6 +144,10 @@ def create_dirs(timestamp):
         os.makedirs("gdrive_dump_{}/deleted".format(timestamp))
     regular_dir = "gdrive_dump_{}/regular".format(timestamp)
     deleted_dir = "gdrive_dump_{}/deleted".format(timestamp)
+    if not os.path.exists("{}/google".format(regular_dir)):
+        os.makedirs("{}/google".format(regular_dir))
+    if not os.path.exists("{}/google".format(deleted_dir)):
+        os.makedirs("{}/google".format(deleted_dir))
     return regular_dir, deleted_dir
 
 def main():
