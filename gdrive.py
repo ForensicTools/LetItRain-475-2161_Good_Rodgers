@@ -69,14 +69,14 @@ def download_revisions(httpauth, fileID, title, path, counter):
             file_path = get_new_file_name(file_path)
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
-        print("          Hashing '" + title + ".rev" + str(rev_num) + "'...")
+        print(counter + " Hashing '" + title + ".rev" + str(rev_num) + "'...")
         with open(path + "/_hashes.txt", "a") as hashes_file:
             hashes_file.write(title + ".rev" + str(rev_num) + "\n")
             hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
             hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
             hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
         rev_num += 1
-    print("          Writing revision info for '" + title + "'...")
+    print(counter + " Writing revision info for '" + title + "'...")
     with open(path + "/" + title + "/" + title + "_revisions.txt", "w") as saved_file:
         for item in revision_info:
             saved_file.write("Revision Number: " + item[0] + "\n")
@@ -135,7 +135,7 @@ def download_files(gauth, httpauth, file_list, path):
                     file_path = get_new_file_name(file_path)
                 with open(file_path, "wb") as saved_file:
                     saved_file.write(content)
-                print("          Hashing '" + down_file['title'] + "'...")
+                print(counter + " Hashing '" + down_file['title'] + "'...")
                 with open(path + "/_hashes.txt", "a") as hashes_file:
                     hashes_file.write(down_file['title'] + "\n")
                     hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
@@ -158,7 +158,7 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
 
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
-        print("          Hashing '" + name + value[0] + "'...")
+        print(counter + " Hashing '" + name + value[0] + "'...")
         with open(path + "/_google/_hashes.txt", "a") as hashes_file:
             hashes_file.write(name + value[0] + "\n")
             hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
