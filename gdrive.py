@@ -63,6 +63,10 @@ def download_revisions(httpauth, fileID, title, path, counter):
         response, content = httpauth.request(url2, 'GET')
         file_path = path + "/" + title + "/" + title + ".rev" + str(rev_num)
         print(counter + " Downloading '" + title + ".rev" + str(rev_num) + "'...")
+
+        # to prevent duplicate file names being saved
+        if os.path.exists(file_path):
+            file_path = get_new_file_name(file_path)
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
         print("          Hashing '" + title + ".rev" + str(rev_num) + "'...")
@@ -100,6 +104,7 @@ def sanitize_name(name):
     name = name.replace('|', '_')
     name = name.replace('<', '_')
     name = name.replace('"', '_')
+    name = name.replace('.', '_')
     new_name = name.replace('>', '_')
     return new_name
 
@@ -124,6 +129,10 @@ def download_files(gauth, httpauth, file_list, path):
                 response, content = httpauth.request(url, 'GET')
                 file_path = path + "/" + down_file['title']
                 print(counter + " Downloading '" + down_file['title'] + "'...")
+
+                # to prevent duplicate file names being saved
+                if os.path.exists(file_path):
+                    file_path = get_new_file_name(file_path)
                 with open(file_path, "wb") as saved_file:
                     saved_file.write(content)
                 print("          Hashing '" + down_file['title'] + "'...")
@@ -142,6 +151,11 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
         name = sanitize_name(down_file['title'])
         file_path = path + "/_google/" + name + value[0]
         print(counter + " Downloading '" + down_file['title'] + "' as '" + name + value[0] + "'...")
+
+        # to prevent duplicate file names being saved
+        if os.path.exists(file_path):
+            file_path = get_new_file_name(file_path)
+
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
         print("          Hashing '" + name + value[0] + "'...")
@@ -152,6 +166,16 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
             hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
     else:
         print(counter + " Couldn't download '" + down_file['title'] + "' because it is an unsupported MIME type.")
+
+# if there is already a file being saved that has the name of the current file
+# being created, this will return a new unique file name
+def get_new_file_name(file_path):
+    file_count = 1
+    file_beginning, extension = file_path.split('.')
+    while os.path.exists(file_beginning + str(file_count) + "." + extension):
+        file_count = file_count + 1
+    new_file_path = file_beginning + str(file_count) + "." + extension
+    return new_file_path
 
 def hash_file(filename, alg):
     # Hashes a file with a given algorithm and returns the hash value
