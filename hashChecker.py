@@ -3,6 +3,7 @@
 # or negative (files that don't match) hash results
 
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-md5file', default="None", help='The user-given txt file of md5 hashes')
@@ -47,6 +48,37 @@ def create_hash_lists(args):
     return master_hash_list
 
 # TODO: Create list of objects of file names and hashes gathered from gdrive and dropbox
+def get_hashes_from_download(folder_name):
+    if os.path.exists(folder_name):
+        # parse deleted
+        if os.path.exists(folder_name + "/deleted"):
+            print("deleted exists")
+            # parse deleted Google docs
+            if os.path.exists(folder_name + "/deleted/_google"):
+                print("deleted gdocs exists")
+                collect_hashes(folder_name + "/deleted/_google")
+            # call non-Google doc deleted items hash collector
+            collect_hashes(folder_name + "/deleted")
+        # parse regular files
+        if os.path.exists(folder_name + "/regular"):
+            print("regular exists")
+            # parse deleted Google docs
+            if os.path.exists(folder_name + "/regular/_google"):
+                print("regular google exists")
+                collect_hashes(folder_name + "/regular/_google")
+            print("regular non-google exists")
+            # call non-Google doc items hash collector
+            collect_hashes(folder_name + "/regular")
+    else:
+        print{"ERROR: Folder does not exist. Exitting..."}
+        return 0
+
+def collect_hashes(path):
+    if os.path.exists(path + "/_hashes.txt"):
+        print("hashes file exists")
+    else:
+        print("Hash file does not exist for " + path)
+
 # TODO: Create positive hashing method
 # TODO: Create negative hashing method
 
@@ -60,9 +92,13 @@ def return_list_from_file(read_file):
     return hash_list
 
 def main():
-    res = error_check(args)
+    #res = error_check(args)
+    #if res == 0:
+    #    return 0
+    #master_list = create_hash_lists(args)
+    folderName = "gdrive_dump_2016-10-28--17-43-54"
+    res = get_hashes_from_download(folderName)
     if res == 0:
         return 0
-    master_list = create_hash_lists(args)
 
 main()
