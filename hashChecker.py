@@ -4,6 +4,7 @@
 
 import argparse
 import os
+from FileObject import FileObject
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-md5file', default="None", help='The user-given txt file of md5 hashes')
@@ -12,33 +13,6 @@ parser.add_argument('-sha1file', default="None", help='The user-given txt file o
 parser.add_argument('--positive', action="store_true", dest="positive", help='Enable positive hashing')
 parser.add_argument('--negative', action="store_true", dest="negative", help='Enable negative hashing')
 args = parser.parse_args()
-
-
-class FileObject():
-    def set_name(self, name):
-        self.name = name
-
-    def set_md5(self, md5):
-        self.md5 = md5
-
-    def set_sha1(self, sha1):
-        self.sha1 = sha1
-
-    def set_sha256(self, sha256):
-        self.sha256 = sha256
-
-    def get_name(self):
-        return self.name
-
-    def get_md5(self):
-        return self.md5
-
-    def get_sha1(self):
-        return self.sha1
-
-    def get_sha256(self):
-        return self.sha256
-
 
 # Checks to make sure options are parsed correctly
 # If there are errors, returns 0 which should exit program when returned to main
@@ -135,8 +109,59 @@ def collect_hashes(path):
     else:
         print("Hash file does not exist for " + path)
 
-# TODO: Create positive hashing method
-# TODO: Create negative hashing method
+# Performs hash matching, alters the match status in the objects accordingly
+# then returns the objects list
+def hash_matching(list_of_downloaded_objects, read_in_hashes):
+    md5 = read_in_hashes[0]
+    sha256 = read_in_hashes[1]
+    sha1 = read_in_hashes[2]
+
+    if md5:
+        for hash in md5:
+            for obj in list_of_downloaded_objects:
+                if obj.get_md5().strip() == hash.strip():
+                    obj.set_md5_hash_match(True)
+    if sha256:
+        for hash in sha256:
+            for obj in list_of_downloaded_objects:
+                if obj.get_sha256().strip() == hash.strip():
+                    obj.set_sha256_hash_match(True)
+    if sha1:
+        for hash in sha1:
+            for obj in list_of_downloaded_objects:
+                if obj.get_sha1().strip() == hash.strip():
+                    obj.set_sha1_hash_match(True)
+    return list_of_downloaded_objects
+
+# Performs positive hashing. Returns objects that match given hashes.
+def positive_hashing(list_of_downloaded_objects):
+    positive_md5 = list()
+    positive_sha256 = list()
+    positive_sha1 = list()
+    for obj in list_of_downloaded_objects:
+        if obj.get_md5_match() == True:
+            positive_md5.append(obj)
+        if obj.get_sha256_match() == True:
+            positive_sha256.append(obj)
+        if obj.get_sha1_match() == True:
+            positive_sha1.append(obj)
+    results = [positive_md5, positive_sha1, positive_sha256]
+    return results
+
+# Performs negative hashing. Returns object that don't match given hashes
+def negative_hashing(list_of_downloaded_objects):
+    negative_md5 = list()
+    negative_sha256 = list()
+    negative_sha1 = list()
+    for obj in list_of_downloaded_objects:
+        if obj.get_md5_match() == False:
+            negative_md5.append(obj)
+        if obj.get_sha256_match() == False:
+            negative_sha256.append(obj)
+        if obj.get_sha1_match() == False:
+            negative_sha1.append(obj)
+    results = [negative_md5, negative_sha1, negative_sha256]
+    return results
 
 # Reads in a specified file full of hashes (one hash per line) and returns a list
 # of the hashes
@@ -148,13 +173,18 @@ def return_list_from_file(read_file):
     return hash_list
 
 def main():
-    #res = error_check(args)
-    #if res == 0:
-    #    return 0
-    #master_list = create_hash_lists(args)
-    folderName = "gdrive_dump_2016-10-28--17-43-54"
-    res = get_hashes_from_download(folderName)
+    res = error_check(args)
     if res == 0:
         return 0
+    master_list = create_hash_lists(args)
+    folderName = "gdrive_dump_2016-10-28--17-43-54"
+    downloaded_files_objects = get_hashes_from_download(folderName)
+    if downloaded_files_objects == 0:
+        return 0
+    hash_matches = hash_matching(downloaded_files_objects, master_list)
+    if args.positive == True:
+        positive_matches = positive_hashing(hash_matches)
+    else:
+        negative_matches = negative_hashing(hash_matches)
 
 main()
