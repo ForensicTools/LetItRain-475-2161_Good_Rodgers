@@ -13,6 +13,33 @@ parser.add_argument('--positive', action="store_true", dest="positive", help='En
 parser.add_argument('--negative', action="store_true", dest="negative", help='Enable negative hashing')
 args = parser.parse_args()
 
+
+class FileObject():
+    def set_name(self, name):
+        self.name = name
+
+    def set_md5(self, md5):
+        self.md5 = md5
+
+    def set_sha1(self, sha1):
+        self.sha1 = sha1
+
+    def set_sha256(self, sha256):
+        self.sha256 = sha256
+
+    def get_name(self):
+        return self.name
+
+    def get_md5(self):
+        return self.md5
+
+    def get_sha1(self):
+        return self.sha1
+
+    def get_sha256(self):
+        return self.sha256
+
+
 # Checks to make sure options are parsed correctly
 # If there are errors, returns 0 which should exit program when returned to main
 def error_check(args):
@@ -50,32 +77,61 @@ def create_hash_lists(args):
 # TODO: Create list of objects of file names and hashes gathered from gdrive and dropbox
 def get_hashes_from_download(folder_name):
     if os.path.exists(folder_name):
+        master_hash_list = list()
         # parse deleted
         if os.path.exists(folder_name + "/deleted"):
-            print("deleted exists")
             # parse deleted Google docs
             if os.path.exists(folder_name + "/deleted/_google"):
-                print("deleted gdocs exists")
-                collect_hashes(folder_name + "/deleted/_google")
+                hash_list = collect_hashes(folder_name + "/deleted/_google")
+                master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
             # call non-Google doc deleted items hash collector
-            collect_hashes(folder_name + "/deleted")
+            hash_list = collect_hashes(folder_name + "/deleted")
+            master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
         # parse regular files
         if os.path.exists(folder_name + "/regular"):
-            print("regular exists")
             # parse deleted Google docs
             if os.path.exists(folder_name + "/regular/_google"):
-                print("regular google exists")
-                collect_hashes(folder_name + "/regular/_google")
-            print("regular non-google exists")
+                hash_list = collect_hashes(folder_name + "/regular/_google")
+                master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
             # call non-Google doc items hash collector
-            collect_hashes(folder_name + "/regular")
+            hash_list = collect_hashes(folder_name + "/regular")
+            master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
+        return master_hash_list
     else:
         print{"ERROR: Folder does not exist. Exitting..."}
         return 0
 
+# Concatenates the master_list and the new hash_list
+def add_hashes_to_master_list(master_list, hashes_to_add):
+    if not hashes_to_add:
+        return master_list
+    for obj in hashes_to_add:
+        if isinstance(obj, FileObject):
+            master_list.append(obj)
+    return master_list
+
+# takes in current hash lists and appends newly found hash values to them
 def collect_hashes(path):
     if os.path.exists(path + "/_hashes.txt"):
-        print("hashes file exists")
+        hash_file = open(path + "/_hashes.txt", 'rb')
+        hash_list = list()
+        count = 0
+        for line in hash_file:
+            if count % 4 == 0:
+                hash_obj = FileObject()
+                hash_obj.set_name(line)
+            if count % 4 == 1:
+                line_split = line.split(' ')
+                hash_obj.set_md5(line_split[1])
+            if count % 4 == 2:
+                line_split = line.split(' ')
+                hash_obj.set_sha1(line_split[1])
+            if count % 4 == 3:
+                line_split = line.split(' ')
+                hash_obj.set_sha256(line_split[1])
+                hash_list.append(hash_obj)
+            count = count + 1
+        return hash_list
     else:
         print("Hash file does not exist for " + path)
 
@@ -86,7 +142,7 @@ def collect_hashes(path):
 # of the hashes
 def return_list_from_file(read_file):
     hash_list = list()
-    file1 = open(read_file, 'r')
+    file1 = open(read_file, 'rb')
     for line in file1:
         hash_list.append(line)
     return hash_list
