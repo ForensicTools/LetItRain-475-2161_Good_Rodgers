@@ -40,7 +40,6 @@ def list_files(dbx, deleted):
         while dbx_list.has_more:
             for entry in dbx_list.entries:
                 if isinstance(entry, dropbox.files.DeletedMetadata):
-                    print(entry)
                     try:
                         revisions = dbx.files_list_revisions(entry.path_lower)
                         if len(revisions.entries) > 0:
