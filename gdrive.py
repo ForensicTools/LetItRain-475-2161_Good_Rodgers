@@ -12,22 +12,22 @@ import hashlib
 # Handles authentication
 def auth():
     gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("letitrain-credentials.json")
+    gauth.LoadCredentialsFile("letitrain-creds-gdrive.txt")
     if gauth.credentials is None:
         gauth.LocalWebserverAuth()
     elif gauth.access_token_expired:
         gauth.Refresh()
     else:
         gauth.Authorize()
-    gauth.SaveCredentialsFile("letitrain-credentials.json")
+    gauth.SaveCredentialsFile("letitrain-creds-gdrive.txt")
     httpauth = gauth.Get_Http_Object()
     return gauth, httpauth
 
 # Retrieves the information about every file
 # Can either do deleted or regular files
-def list_files(gauth, trashed):
+def list_files(gauth, deleted):
     drive = GoogleDrive(gauth)
-    if trashed:
+    if deleted:
         print("Retrieving list of deleted files...")
         file_list = drive.ListFile({'q': 'trashed=true'}).GetList()
         print("Done!")
@@ -63,7 +63,6 @@ def download_revisions(httpauth, fileID, title, path, counter):
         response, content = httpauth.request(url2, 'GET')
         file_path = path + "/" + title + "/" + title + ".rev" + str(rev_num)
         print(counter + " Downloading '" + title + ".rev" + str(rev_num) + "'...")
-
         # to prevent duplicate file names being saved
         if os.path.exists(file_path):
             file_path, title = get_new_file_name(file_path)
@@ -94,7 +93,7 @@ def check_revisions(gauth, fileID):
     except:
         return False
 
-# sanitizes name to get rid of duplicates
+# sanitizes name to remove invalid characters
 def sanitize_name(name):
     name = name.replace('/', '_')
     name = name.replace(':', '_')
@@ -153,7 +152,7 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
         # to prevent duplicate file names being saved
         if os.path.exists(file_path):
             file_path, name = get_new_file_name(file_path)
-        print(counter + " Downloading '" + down_file['title'] + "' as '" + name + "'...")#"' + value[0] + "'...")
+        print(counter + " Downloading '" + down_file['title'] + "' as '" + name + value[0] + "'...")#"' + value[0] + "'...")
 
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
@@ -219,9 +218,9 @@ def main():
     print("Downloading all regular files into '" + regular_dir + "' ...")
     download_files(gauth, httpauth, file_list, regular_dir)
     print("Done!")
-    trashed_file_list = list_files(gauth, True)
+    deleted_file_list = list_files(gauth, True)
     print("Downloading all deleted files into '" + deleted_dir + "' ...")
-    download_files(gauth, httpauth, trashed_file_list, deleted_dir)
+    download_files(gauth, httpauth, deleted_file_list, deleted_dir)
     print("Done!")
     print("Exiting...")
 if __name__ == '__main__':
