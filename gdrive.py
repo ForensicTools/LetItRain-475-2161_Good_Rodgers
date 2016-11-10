@@ -12,22 +12,22 @@ import hashlib
 # Handles authentication
 def auth():
     gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("letitrain-credentials.json")
+    gauth.LoadCredentialsFile("letitrain-creds-gdrive.txt")
     if gauth.credentials is None:
         gauth.LocalWebserverAuth()
     elif gauth.access_token_expired:
         gauth.Refresh()
     else:
         gauth.Authorize()
-    gauth.SaveCredentialsFile("letitrain-credentials.json")
+    gauth.SaveCredentialsFile("letitrain-creds-gdrive.txt")
     httpauth = gauth.Get_Http_Object()
     return gauth, httpauth
 
 # Retrieves the information about every file
 # Can either do deleted or regular files
-def list_files(gauth, trashed):
+def list_files(gauth, deleted):
     drive = GoogleDrive(gauth)
-    if trashed:
+    if deleted:
         print("Retrieving list of deleted files...")
         file_list = drive.ListFile({'q': 'trashed=true'}).GetList()
         print("Done!")
@@ -63,10 +63,9 @@ def download_revisions(httpauth, fileID, title, path, counter):
         response, content = httpauth.request(url2, 'GET')
         file_path = path + "/" + title + "/" + title + ".rev" + str(rev_num)
         print(counter + " Downloading '" + title + ".rev" + str(rev_num) + "'...")
-
         # to prevent duplicate file names being saved
         if os.path.exists(file_path):
-            file_path = get_new_file_name(file_path)
+            file_path, title = get_new_file_name(file_path)
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
         print(counter + " Hashing '" + title + ".rev" + str(rev_num) + "'...")
@@ -94,7 +93,7 @@ def check_revisions(gauth, fileID):
     except:
         return False
 
-# sanitizes name to get rid of duplicates
+# sanitizes name to remove invalid characters
 def sanitize_name(name):
     name = name.replace('/', '_')
     name = name.replace(':', '_')
@@ -129,15 +128,15 @@ def download_files(gauth, httpauth, file_list, path):
                 response, content = httpauth.request(url, 'GET')
                 file_path = path + "/" + down_file['title']
                 print(counter + " Downloading '" + down_file['title'] + "'...")
-
+                title = down_file['title']
                 # to prevent duplicate file names being saved
                 if os.path.exists(file_path):
-                    file_path = get_new_file_name(file_path)
+                    file_path, title = get_new_file_name(file_path)
                 with open(file_path, "wb") as saved_file:
                     saved_file.write(content)
                 print(counter + " Hashing '" + down_file['title'] + "'...")
                 with open(path + "/_hashes.txt", "a") as hashes_file:
-                    hashes_file.write(down_file['title'] + "\n")
+                    hashes_file.write(title + "\n")
                     hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
                     hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
                     hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
@@ -150,17 +149,16 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
         response, content = httpauth.request(url, 'GET')
         name = sanitize_name(down_file['title'])
         file_path = path + "/_google/" + name + value[0]
-        print(counter + " Downloading '" + down_file['title'] + "' as '" + name + value[0] + "'...")
-
         # to prevent duplicate file names being saved
         if os.path.exists(file_path):
-            file_path = get_new_file_name(file_path)
+            file_path, name = get_new_file_name(file_path)
+        print(counter + " Downloading '" + down_file['title'] + "' as '" + name + value[0] + "'...")#"' + value[0] + "'...")
 
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
-        print(counter + " Hashing '" + name + value[0] + "'...")
+        print(counter + " Hashing '" + name + "'...") #value[0] + "'...")
         with open(path + "/_google/_hashes.txt", "a") as hashes_file:
-            hashes_file.write(name + value[0] + "\n")
+            hashes_file.write(name + "\n")#value[0] + "\n")
             hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
             hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
             hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
@@ -175,7 +173,9 @@ def get_new_file_name(file_path):
     while os.path.exists(file_beginning + str(file_count) + "." + extension):
         file_count = file_count + 1
     new_file_path = file_beginning + str(file_count) + "." + extension
-    return new_file_path
+    file_name = file_beginning.split('/')
+    title = file_name[-1] + str(file_count) + "." + extension
+    return new_file_path, title
 
 def hash_file(filename, alg):
     # Hashes a file with a given algorithm and returns the hash value
@@ -218,9 +218,9 @@ def main():
     print("Downloading all regular files into '" + regular_dir + "' ...")
     download_files(gauth, httpauth, file_list, regular_dir)
     print("Done!")
-    trashed_file_list = list_files(gauth, True)
+    deleted_file_list = list_files(gauth, True)
     print("Downloading all deleted files into '" + deleted_dir + "' ...")
-    download_files(gauth, httpauth, trashed_file_list, deleted_dir)
+    download_files(gauth, httpauth, deleted_file_list, deleted_dir)
     print("Done!")
     print("Exiting...")
 if __name__ == '__main__':
