@@ -167,7 +167,7 @@ def create_dirs(timestamp):
     deleted_dir = "dbox_dump_{}/deleted".format(timestamp)
     return regular_dir, deleted_dir
 
-def main():
+def dropbox():
     dbx = auth()
     if not dbx:
         print("Could not authenticate to Dropbox. Please check your access token.")
@@ -194,7 +194,5 @@ def main():
         print("Done!")
     else:
         print("Skipping deleted files.")
-    print("Exiting...")
-
-if __name__ == '__main__':
-    main()
+        print("Done!")
+    return "dbox_dump_" + timestamp

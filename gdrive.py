@@ -208,7 +208,7 @@ def create_dirs(timestamp):
         os.makedirs("{}/_google".format(deleted_dir))
     return regular_dir, deleted_dir
 
-def main():
+def google_drive():
     gauth, httpauth = auth()
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
     print("Creating directories...")
@@ -222,6 +222,4 @@ def main():
     print("Downloading all deleted files into '" + deleted_dir + "' ...")
     download_files(gauth, httpauth, deleted_file_list, deleted_dir)
     print("Done!")
-    print("Exiting...")
-if __name__ == '__main__':
-    main()
+    return "gdrive_dump_" + timestamp

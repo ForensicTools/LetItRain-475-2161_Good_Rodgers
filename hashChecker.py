@@ -4,25 +4,8 @@
 
 import argparse
 import os
+import sys
 from FileObject import FileObject
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-md5file', default="None", help='The user-given txt file of md5 hashes')
-parser.add_argument('-sha256file', default="None", help='The user-given txt file of sha256 hashes')
-parser.add_argument('-sha1file', default="None", help='The user-given txt file of sha1 hashes')
-parser.add_argument('--positive', action="store_true", dest="positive", help='Enable positive hashing')
-parser.add_argument('--negative', action="store_true", dest="negative", help='Enable negative hashing')
-args = parser.parse_args()
-
-# Checks to make sure options are parsed correctly
-# If there are errors, returns 0 which should exit program when returned to main
-def error_check(args):
-    if args.positive and args.negative:
-        print("ERROR: Choose positive or negative, cannot do both.")
-        return 0
-    if not args.positive and not args.negative:
-        print("ERROR: Please indicate whether positive or negative")
-        return 0
 
 # Creates a 2D list of the user-submitted hashes. Will return a list of lists.
 # If one of the files for hashes wasn't included, that spot will be an empty list
@@ -48,7 +31,7 @@ def create_hash_lists(args):
         master_hash_list.append(sha1_hashes)
     return master_hash_list
 
-# TODO: Create list of objects of file names and hashes gathered from gdrive and dropbox
+# Create list of objects of file names and hashes gathered from gdrive and dropbox
 def get_hashes_from_download(folder_name):
     if os.path.exists(folder_name):
         master_hash_list = list()
@@ -58,7 +41,7 @@ def get_hashes_from_download(folder_name):
             if os.path.exists(folder_name + "/deleted/_google"):
                 hash_list = collect_hashes(folder_name + "/deleted/_google")
                 master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
-            # call non-Google doc deleted items hash collector
+            # deleted items hash collector
             hash_list = collect_hashes(folder_name + "/deleted")
             master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
         # parse regular files
@@ -72,8 +55,7 @@ def get_hashes_from_download(folder_name):
             master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
         return master_hash_list
     else:
-        print{"ERROR: Folder does not exist. Exitting..."}
-        return 0
+        sys.exit("ERROR: Folder does not exist. Exitting...")
 
 # Concatenates the master_list and the new hash_list
 def add_hashes_to_master_list(master_list, hashes_to_add):
@@ -115,7 +97,6 @@ def hash_matching(list_of_downloaded_objects, read_in_hashes):
     md5 = read_in_hashes[0]
     sha256 = read_in_hashes[1]
     sha1 = read_in_hashes[2]
-
     if md5:
         for hash in md5:
             for obj in list_of_downloaded_objects:
@@ -131,6 +112,7 @@ def hash_matching(list_of_downloaded_objects, read_in_hashes):
             for obj in list_of_downloaded_objects:
                 if obj.get_sha1().strip() == hash.strip():
                     obj.set_sha1_hash_match(True)
+    print("Done!")
     return list_of_downloaded_objects
 
 # Performs positive hashing. Returns objects that match given hashes.
@@ -146,6 +128,7 @@ def positive_hashing(list_of_downloaded_objects):
         if obj.get_sha1_match() == True:
             positive_sha1.append(obj)
     results = [positive_md5, positive_sha1, positive_sha256]
+    print("Done!")
     return results
 
 # Performs negative hashing. Returns object that don't match given hashes
@@ -161,6 +144,7 @@ def negative_hashing(list_of_downloaded_objects):
         if obj.get_sha1_match() == False:
             negative_sha1.append(obj)
     results = [negative_md5, negative_sha1, negative_sha256]
+    print("Done!")
     return results
 
 # Reads in a specified file full of hashes (one hash per line) and returns a list
@@ -172,19 +156,17 @@ def return_list_from_file(read_file):
         hash_list.append(line)
     return hash_list
 
-def main():
-    res = error_check(args)
-    if res == 0:
-        return 0
+def hash_checker(folder_name, args):
     master_list = create_hash_lists(args)
-    folderName = "gdrive_dump_2016-10-28--17-43-54"
-    downloaded_files_objects = get_hashes_from_download(folderName)
-    if downloaded_files_objects == 0:
-        return 0
+    print("Getting hashes from " + folder_name + "...")
+    downloaded_files_objects = get_hashes_from_download(folder_name)
+    print("Finding matching hashes...")
     hash_matches = hash_matching(downloaded_files_objects, master_list)
     if args.positive == True:
+        print("Performing positive hash...")
         positive_matches = positive_hashing(hash_matches)
+        return positive_matches
     else:
+        print("Performing nagative hash...")
         negative_matches = negative_hashing(hash_matches)
-
-main()
+        return negative_matches
