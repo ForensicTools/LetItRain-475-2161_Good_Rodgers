@@ -186,11 +186,20 @@ def create_dirs(timestamp):
     deleted_dir = "dbox_dump_{}/deleted".format(timestamp)
     return regular_dir, deleted_dir
 
-def dbox(timestamp, confirm, log_file):
+def dbox(timestamp, log_file):
     dbx = auth(log_file)
     if not dbx:
         log_and_print(log_file, "Could not authenticate to Dropbox. Please check your access token.")
         sys.exit()
+    log_and_print(log_file, "Sucessfully authenticated to Dropbox.")
+    print("Would you like to attempt to download deleted files and their revisions?")
+    print("WARNING: THIS WILL MODIFY THE DELETED FILES IN DROPBOX")
+    print("In order to download deleted files, they must first be restored in Dropbox.")
+    print("After they are restored, they will be deleted again, adding a new revision to them.")
+    print("This step may take a VERY LONG TIME if there are a lot of deleted files.")
+    print("We have to check each one to see if it is still recoverable.")
+    print("If you would like to continue downloading deleted files, please enter 'Yes, I am sure'")
+    confirm = input("Otherwise, just hit enter: ")
     log_and_print(log_file, "Creating directories...")
     regular_dir, deleted_dir = create_dirs(timestamp)
     log_and_print(log_file, "Done!")

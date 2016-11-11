@@ -213,6 +213,7 @@ def create_dirs(timestamp):
 
 def google_drive(timestamp, log_file):
     gauth, httpauth = auth()
+    log_and_print(log_file, "Sucessfully authenticated to Google Drive.")
     log_and_print(log_file, "Creating directories...")
     regular_dir, deleted_dir = create_dirs(timestamp)
     log_and_print(log_file, "Done!")

@@ -43,14 +43,7 @@ def main():
     log_file = create_log_file(timestamp)
     if args.dropbox:
         log_and_print(log_file, "Running Dropbox tool...")
-        print("Would you like to attempt to download deleted files and their revisions?")
-        print("WARNING: THIS WILL MODIFY THE DELETED FILES IN DROPBOX")
-        print("In order to download deleted files, they must first be restored in Dropbox.")
-        print("After they are restored, they will be deleted again, adding a new revision to them.")
-        print("This step may take a VERY LONG TIME if there are a lot of deleted files.")
-        print("We have to check each one to see if it is still recoverable.")
-        confirm = input("If you would like to continue downloading deleted files, please enter 'Yes, I am sure': ")
-        folder_name = dbox.dbox(timestamp, confirm, log_file)
+        folder_name = dbox.dbox(timestamp, log_file)
     else:
         log_and_print(log_file, "Running Google Drive tool...")
         folder_name = gdrive.google_drive(timestamp, log_file)
