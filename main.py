@@ -5,7 +5,7 @@ import os
 import sys
 import datetime
 import gdrive
-import hashChecker
+import hash_checker
 import dbox
 import report
 

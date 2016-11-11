@@ -13,33 +13,28 @@ def auth(log_file):
             access_token = creds_file.readline().strip()
             if not access_token:
                 log_and_print(log_file, "Credentials file doesn't contain a key.")
-                app_key = input("Enter the app key for the Dropbox app: ").strip()
-                app_secret = input("Enter the app secret for the Dropbox app: ").strip()
-                flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
-                authorize_url = flow.start()
-                log_and_print(log_file, "1. Go to: " + authorize_url)
-                log_and_print(log_file, "2. Click 'Allow' (you might have to log in first)")
-                code = input("3. Enter the authorization code that you are given here: ").strip()
-                access_token, user_id = flow.finish(code)
-                with open("letitrain-creds-dbox.txt", "w") as creds_file:
-                    creds_file.write(access_token)
+                access_token = gen_access_token(log_file)
     else:
-        app_key = input("Enter the app key for the Dropbox app: ").strip()
-        app_secret = input("Enter the app secret for the Dropbox app: ").strip()
-        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
-        authorize_url = flow.start()
-        log_and_print(log_file, "1. Go to: " + authorize_url)
-        log_and_print(log_file, "2. Click 'Allow' (you might have to log in first)")
-        code = input("3. Enter the authorization code that you are given here: ").strip()
-        access_token, user_id = flow.finish(code)
-        with open("letitrain-creds-dbox.txt", "w") as creds_file:
-            creds_file.write(access_token)
+        access_token = gen_access_token(log_file)
     dbx = dropbox.Dropbox(access_token)
     try:
         dbx.users_get_current_account()
     except:
         return False
     return dbx
+
+def gen_access_token(log_file):
+    app_key = input("Enter the app key for the Dropbox app: ").strip()
+    app_secret = input("Enter the app secret for the Dropbox app: ").strip()
+    flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+    authorize_url = flow.start()
+    log_and_print(log_file, "1. Go to: " + authorize_url)
+    log_and_print(log_file, "2. Click 'Allow' (you might have to log in first)")
+    code = input("3. Enter the authorization code that you are given here: ").strip()
+    access_token, user_id = flow.finish(code)
+    with open("letitrain-creds-dbox.txt", "w") as creds_file:
+        creds_file.write(access_token)
+    return access_token
 
 def list_files(dbx, deleted, log_file):
     file_list = []

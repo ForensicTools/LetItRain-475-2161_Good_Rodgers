@@ -5,7 +5,7 @@
 import argparse
 import os
 import sys
-from FileObject import FileObject
+from file_object import FileObject
 
 # Creates a 2D list of the user-submitted hashes. Will return a list of lists.
 # If one of the files for hashes wasn't included, that spot will be an empty list
