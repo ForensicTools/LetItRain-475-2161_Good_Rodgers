@@ -31,7 +31,7 @@ def list_files(dbx, deleted, log_file):
     file_list = []
     if deleted:
         log_and_print(log_file, "Retrieving list of deleted files...")
-        dbx_list = dbx.files_list_folder('', recursive=False, include_deleted=True)
+        dbx_list = dbx.files_list_folder('', recursive=True, include_deleted=True)
         for entry in dbx_list.entries:
             if isinstance(entry, dropbox.files.DeletedMetadata):
                 log_and_print(log_file, "Checking if '" + entry.path_display + "' can be restored...")
