@@ -3,10 +3,12 @@ import os
 import hashlib
 import sys
 
+# Print something to the console and log it to the log file
 def log_and_print(log_file, log_entry):
     log_file.write(log_entry + "\n")
     print(log_entry)
 
+# Authenticate with Dropbox and save the access token for future runs
 def auth(log_file):
     if os.path.exists("letitrain-creds-dbox.txt"):
         with open("letitrain-creds-dbox.txt", "r") as creds_file:
@@ -23,6 +25,7 @@ def auth(log_file):
         return False
     return dbx
 
+# Generate the access token for the Dropbox app to interrogate the account
 def gen_access_token(log_file):
     app_key = input("Enter the app key for the Dropbox app: ").strip()
     app_secret = input("Enter the app secret for the Dropbox app: ").strip()
@@ -36,6 +39,9 @@ def gen_access_token(log_file):
         creds_file.write(access_token)
     return access_token
 
+# List all files in the Dropbox account
+# Can return both regular files and deleted files
+# Deleted files have to be checked one by one to see if it can be restored
 def list_files(dbx, deleted, log_file):
     file_list = []
     if deleted:
@@ -70,11 +76,14 @@ def list_files(dbx, deleted, log_file):
                 file_list.append(entry)
     return file_list
 
+
+# Check if there are any revisions for a given file
 def check_revisions(dbx, file_entry):
     revisions = dbx.files_list_revisions(file_entry.path_lower)
     if len(revisions.entries) > 1:
         return revisions
 
+# Download all available revisions for a given file and write the revision information to a file
 def download_revisions(dbx, revisions, path, counter, file_name, deleted, log_file):
     if not os.path.exists(path + "/" + file_name):
         os.makedirs(path + "/" + file_name)
@@ -108,6 +117,8 @@ def download_revisions(dbx, revisions, path, counter, file_name, deleted, log_fi
             saved_file.write("--Revision ID: " + item[1] + "\n")
             saved_file.write("--Revision Last Modifed: " + str(item[2]) + "\n")
 
+# Download all files in the Dropbox account and perform hashing on each one
+# Can either download regular files or deleted files that can still be restored
 def download_files(dbx, file_list, path, deleted, log_file):
     total = len(file_list)
     progress = 1
@@ -154,6 +165,7 @@ def download_files(dbx, file_list, path, deleted, log_file):
                 log_and_print(log_file, counter + " Skipping '" + file_entry.name + "' because it is a directory.")
             progress += 1
 
+# Hash a given file in either SHA1, SHA256, or MD5
 def hash_file(filename, alg):
     # Hashes a file with a given algorithm and returns the hash value
     blsize = 65536
@@ -170,6 +182,7 @@ def hash_file(filename, alg):
             buf = hashfile.read(blsize)
     return hasher.hexdigest()
 
+# Create the directories that the tool will store the downloded files and generated reports
 def create_dirs(timestamp):
     if not os.path.exists("dbox_dump_{}".format(timestamp)):
         os.makedirs("dbox_dump_{}".format(timestamp))
