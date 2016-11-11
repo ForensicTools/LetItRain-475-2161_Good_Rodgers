@@ -40,6 +40,14 @@ Google Drive, to use the API, requires credentials for the account being accesse
 ---
 
 #### Getting Access to the Dropbox API
+Similar to the Google Drive API, you must create an account and set up an app to use the Dropbox API.
+
+* Go [here](https://www.dropbox.com/developers/apps/create) and log in or create a new Dropbox account.
+
+* For "Choose an API", select the "Dropbox API" option. For "Choose the type of access you need", select the "Full Dropbox" option. Name it whatever you want.
+
+*
+
 ---
 
 #### Authorizing the Account with the Google Drive Project

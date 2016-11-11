@@ -10,17 +10,31 @@ def log_and_print(log_file, log_entry):
 def auth(log_file):
     if os.path.exists("letitrain-creds-dbox.txt"):
         with open("letitrain-creds-dbox.txt", "r") as creds_file:
-            key = creds_file.readline().strip()
-            if not key:
+            access_token = creds_file.readline().strip()
+            if not access_token:
                 log_and_print(log_file, "Credentials file doesn't contain a key.")
-                key = input("Enter your Dropbox access token: ")
+                app_key = input("Enter the app key for the Dropbox app: ").strip()
+                app_secret = input("Enter the app secret for the Dropbox app: ").strip()
+                flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+                authorize_url = flow.start()
+                log_and_print(log_file, "1. Go to: " + authorize_url)
+                log_and_print(log_file, "2. Click 'Allow' (you might have to log in first)")
+                code = input("3. Enter the authorization code that you are given here: ").strip()
+                access_token, user_id = flow.finish(code)
                 with open("letitrain-creds-dbox.txt", "w") as creds_file:
-                    creds_file.write(key)
+                    creds_file.write(access_token)
     else:
-        key = input("Enter your Dropbox access token: ")
+        app_key = input("Enter the app key for the Dropbox app: ").strip()
+        app_secret = input("Enter the app secret for the Dropbox app: ").strip()
+        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+        authorize_url = flow.start()
+        log_and_print(log_file, "1. Go to: " + authorize_url)
+        log_and_print(log_file, "2. Click 'Allow' (you might have to log in first)")
+        code = input("3. Enter the authorization code that you are given here: ").strip()
+        access_token, user_id = flow.finish(code)
         with open("letitrain-creds-dbox.txt", "w") as creds_file:
-            creds_file.write(key)
-    dbx = dropbox.Dropbox(key)
+            creds_file.write(access_token)
+    dbx = dropbox.Dropbox(access_token)
     try:
         dbx.users_get_current_account()
     except:
