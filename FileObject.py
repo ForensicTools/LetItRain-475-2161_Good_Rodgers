@@ -5,6 +5,7 @@ class FileObject():
         self.name = "None"
         self.md5 = "None"
         self.sha1 = "None"
+        self.sha256 = "None"
         self.md5_match = False
         self.sha1_match = False
         self.sha256_match = False
