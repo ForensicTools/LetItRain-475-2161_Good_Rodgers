@@ -5,7 +5,7 @@ import os
 import sys
 import gdrive
 import hashChecker
-#import dbox
+import dbox
 import report
 
 parser = argparse.ArgumentParser()
@@ -37,7 +37,7 @@ def main():
     else:
         folder_name = gdrive.google_drive()
     results = hashChecker.hash_checker(folder_name, args)
-    report.generate_report(results, folder_name)
+    report.generate_report(results, folder_name, args)
 
 if __name__ == '__main__':
     main()
