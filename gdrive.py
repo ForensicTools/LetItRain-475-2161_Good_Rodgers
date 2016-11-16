@@ -5,9 +5,12 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import httplib2
 import json
-import datetime
 import os
 import hashlib
+
+def log_and_print(log_file, log_entry):
+    log_file.write(log_entry + "\n")
+    print(log_entry)
 
 # Handles authentication
 def auth():
@@ -25,16 +28,16 @@ def auth():
 
 # Retrieves the information about every file
 # Can either do deleted or regular files
-def list_files(gauth, deleted):
+def list_files(gauth, deleted, log_file):
     drive = GoogleDrive(gauth)
     if deleted:
-        print("Retrieving list of deleted files...")
+        log_and_print(log_file, "Retrieving list of deleted files...")
         file_list = drive.ListFile({'q': 'trashed=true'}).GetList()
-        print("Done!")
+        log_and_print(log_file, "Done!")
     else:
-        print("Retrieving list of regular files...")
+        log_and_print(log_file, "Retrieving list of regular files...")
         file_list = drive.ListFile({'q': 'trashed=false'}).GetList()
-        print("Done!")
+        log_and_print(log_file, "Done!")
     return file_list
 
 # makes the hashmap that determines file type to download when file is a
@@ -49,7 +52,7 @@ def make_hash_map():
 
 # Retrieves version information in JSON format of previous versions
 # given a file ID
-def download_revisions(httpauth, fileID, title, path, counter):
+def download_revisions(httpauth, fileID, title, path, counter, log_file):
     if not os.path.exists(path + "/" + title):
         os.makedirs(path + "/" + title)
     url = "https://www.googleapis.com/drive/v3/files/" + fileID + "/revisions"
@@ -62,20 +65,20 @@ def download_revisions(httpauth, fileID, title, path, counter):
         url2 = url + "/" + revision["id"] + "?alt=media"
         response, content = httpauth.request(url2, 'GET')
         file_path = path + "/" + title + "/" + title + ".rev" + str(rev_num)
-        print(counter + " Downloading '" + title + ".rev" + str(rev_num) + "'...")
+        log_and_print(log_file, counter + " Downloading '" + title + ".rev" + str(rev_num) + "'...")
         # to prevent duplicate file names being saved
         if os.path.exists(file_path):
             file_path, title = get_new_file_name(file_path)
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
-        print(counter + " Hashing '" + title + ".rev" + str(rev_num) + "'...")
+        log_and_print(log_file, counter + " Hashing '" + title + ".rev" + str(rev_num) + "'...")
         with open(path + "/_hashes.txt", "a") as hashes_file:
             hashes_file.write(title + ".rev" + str(rev_num) + "\n")
             hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
             hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
             hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
         rev_num += 1
-    print(counter + " Writing revision info for '" + title + "'...")
+    log_and_print(log_file, counter + " Writing revision info for '" + title + "'...")
     with open(path + "/" + title + "/" + title + "_revisions.txt", "w") as saved_file:
         for item in revision_info:
             saved_file.write("Revision Number: " + item[0] + "\n")
@@ -108,7 +111,7 @@ def sanitize_name(name):
     return new_name
 
 # Download files from drive when given the fileID
-def download_files(gauth, httpauth, file_list, path):
+def download_files(gauth, httpauth, file_list, path, log_file):
     total = len(file_list)
     progress = 0
     drive = GoogleDrive(gauth)
@@ -117,24 +120,24 @@ def download_files(gauth, httpauth, file_list, path):
         counter = "[" + str(progress).zfill(len(str(total))) + "/" + str(total) + "]"
         if check_revisions(httpauth, down_file['id']):
             if 'google-apps' in down_file['mimeType']:
-                export_to_file(down_file, gdrive_file_type, httpauth, path, counter)
+                export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file)
             else:
-                download_revisions(httpauth, down_file['id'], down_file['title'], path, counter)
+                download_revisions(httpauth, down_file['id'], down_file['title'], path, counter, log_file)
         else:
             if 'google-apps' in down_file['mimeType']:
-                export_to_file(down_file, gdrive_file_type, httpauth, path, counter)
+                export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file)
             else:
                 url = "https://www.googleapis.com/drive/v3/files/{}?alt=media".format(down_file['id'])
                 response, content = httpauth.request(url, 'GET')
                 file_path = path + "/" + down_file['title']
-                print(counter + " Downloading '" + down_file['title'] + "'...")
+                log_and_print(log_file, counter + " Downloading '" + down_file['title'] + "'...")
                 title = down_file['title']
                 # to prevent duplicate file names being saved
                 if os.path.exists(file_path):
                     file_path, title = get_new_file_name(file_path)
                 with open(file_path, "wb") as saved_file:
                     saved_file.write(content)
-                print(counter + " Hashing '" + down_file['title'] + "'...")
+                log_and_print(log_file, counter + " Hashing '" + down_file['title'] + "'...")
                 with open(path + "/_hashes.txt", "a") as hashes_file:
                     hashes_file.write(title + "\n")
                     hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
@@ -142,7 +145,7 @@ def download_files(gauth, httpauth, file_list, path):
                     hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
         progress += 1
 
-def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
+def export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file):
     value = gdrive_file_type[down_file['mimeType']]
     if value[0] != 'None':
         url = "https://www.googleapis.com/drive/v3/files/{}/export?mimeType={}".format(down_file['id'], value[1])
@@ -152,18 +155,18 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter):
         # to prevent duplicate file names being saved
         if os.path.exists(file_path):
             file_path, name = get_new_file_name(file_path)
-        print(counter + " Downloading '" + down_file['title'] + "' as '" + name + value[0] + "'...")#"' + value[0] + "'...")
+        log_and_print(log_file, counter + " Downloading '" + down_file['title'] + "' as '" + name + value[0] + "'...")#"' + value[0] + "'...")
 
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
-        print(counter + " Hashing '" + name + "'...") #value[0] + "'...")
+        log_and_print(log_file, counter + " Hashing '" + name + "'...") #value[0] + "'...")
         with open(path + "/_google/_hashes.txt", "a") as hashes_file:
             hashes_file.write(name + "\n")#value[0] + "\n")
             hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
             hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
             hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
     else:
-        print(counter + " Couldn't download '" + down_file['title'] + "' because it is an unsupported MIME type.")
+        log_and_print(log_file, counter + " Skipping '" + down_file['title'] + "' because it is an unsupported MIME type.")
 
 # if there is already a file being saved that has the name of the current file
 # being created, this will return a new unique file name
@@ -208,20 +211,18 @@ def create_dirs(timestamp):
         os.makedirs("{}/_google".format(deleted_dir))
     return regular_dir, deleted_dir
 
-def main():
+def google_drive(timestamp, log_file):
     gauth, httpauth = auth()
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
-    print("Creating directories...")
+    log_and_print(log_file, "Sucessfully authenticated to Google Drive.")
+    log_and_print(log_file, "Creating directories...")
     regular_dir, deleted_dir = create_dirs(timestamp)
-    print("Done!")
-    file_list = list_files(gauth, False)
-    print("Downloading all regular files into '" + regular_dir + "' ...")
-    download_files(gauth, httpauth, file_list, regular_dir)
-    print("Done!")
-    deleted_file_list = list_files(gauth, True)
-    print("Downloading all deleted files into '" + deleted_dir + "' ...")
-    download_files(gauth, httpauth, deleted_file_list, deleted_dir)
-    print("Done!")
-    print("Exiting...")
-if __name__ == '__main__':
-    main()
+    log_and_print(log_file, "Done!")
+    file_list = list_files(gauth, False, log_file)
+    log_and_print(log_file, "Downloading all regular files into '" + regular_dir + "' ...")
+    download_files(gauth, httpauth, file_list, regular_dir, log_file)
+    log_and_print(log_file, "Done!")
+    deleted_file_list = list_files(gauth, True, log_file)
+    log_and_print(log_file, "Downloading all deleted files into '" + deleted_dir + "' ...")
+    download_files(gauth, httpauth, deleted_file_list, deleted_dir, log_file)
+    log_and_print(log_file, "Done!")
+    return "gdrive_dump_" + timestamp
