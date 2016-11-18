@@ -7,6 +7,14 @@ import os
 import sys
 from file_object import FileObject
 
+def log_and_print(log_file, log_entry, newline=True):
+    if newline:
+        log_file.write(log_entry + "\n")
+        print(log_entry)
+    else:
+        log_file.write(log_entry)
+        print(log_entry, end="", flush=True)
+
 # Creates a 2D list of the user-submitted hashes. Will return a list of lists.
 # If one of the files for hashes wasn't included, that spot will be an empty list
 def create_hash_lists(args):
@@ -32,26 +40,26 @@ def create_hash_lists(args):
     return master_hash_list
 
 # Create list of objects of file names and hashes gathered from gdrive and dropbox
-def get_hashes_from_download(folder_name):
+def get_hashes_from_download(folder_name, log_file):
     if os.path.exists(folder_name):
         master_hash_list = list()
         # parse deleted
         if os.path.exists(folder_name + "/deleted"):
             # parse deleted Google docs
             if os.path.exists(folder_name + "/deleted/_google"):
-                hash_list = collect_hashes(folder_name + "/deleted/_google")
+                hash_list = collect_hashes(folder_name + "/deleted/_google", log_file)
                 master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
             # deleted items hash collector
-            hash_list = collect_hashes(folder_name + "/deleted")
+            hash_list = collect_hashes(folder_name + "/deleted", log_file)
             master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
         # parse regular files
         if os.path.exists(folder_name + "/regular"):
             # parse deleted Google docs
             if os.path.exists(folder_name + "/regular/_google"):
-                hash_list = collect_hashes(folder_name + "/regular/_google")
+                hash_list = collect_hashes(folder_name + "/regular/_google", log_file)
                 master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
             # call non-Google doc items hash collector
-            hash_list = collect_hashes(folder_name + "/regular")
+            hash_list = collect_hashes(folder_name + "/regular", log_file)
             master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
         return master_hash_list
     else:
@@ -67,9 +75,9 @@ def add_hashes_to_master_list(master_list, hashes_to_add):
     return master_list
 
 # takes in current hash lists and appends newly found hash values to them
-def collect_hashes(path):
+def collect_hashes(path, log_file):
     if os.path.exists(path + "/_hashes.txt"):
-        hash_file = open(path + "/_hashes.txt", 'rb')
+        hash_file = open(path + "/_hashes.txt", 'r')
         hash_list = list()
         count = 0
         for line in hash_file:
@@ -89,7 +97,7 @@ def collect_hashes(path):
             count = count + 1
         return hash_list
     else:
-        print("Hash file does not exist for " + path)
+        return []
 
 # Performs hash matching, alters the match status in the objects accordingly
 # then returns the objects list
@@ -112,7 +120,6 @@ def hash_matching(list_of_downloaded_objects, read_in_hashes):
             for obj in list_of_downloaded_objects:
                 if obj.get_sha1().strip() == hash.strip():
                     obj.set_sha1_hash_match(True)
-    print("Done!")
     return list_of_downloaded_objects
 
 # Performs positive hashing. Returns objects that match given hashes.
@@ -128,7 +135,6 @@ def positive_hashing(list_of_downloaded_objects):
         if obj.get_sha1_match() == True:
             positive_sha1.append(obj)
     results = [positive_md5, positive_sha1, positive_sha256]
-    print("Done!")
     return results
 
 # Performs negative hashing. Returns object that don't match given hashes
@@ -144,29 +150,28 @@ def negative_hashing(list_of_downloaded_objects):
         if obj.get_sha1_match() == False:
             negative_sha1.append(obj)
     results = [negative_md5, negative_sha1, negative_sha256]
-    print("Done!")
     return results
 
 # Reads in a specified file full of hashes (one hash per line) and returns a list
 # of the hashes
 def return_list_from_file(read_file):
     hash_list = list()
-    file1 = open(read_file, 'rb')
+    file1 = open(read_file, 'r')
     for line in file1:
         hash_list.append(line)
     return hash_list
 
-def hash_checker(folder_name, args):
+def hash_checker(folder_name, args, log_file):
     master_list = create_hash_lists(args)
-    print("Getting hashes from " + folder_name + "...")
-    downloaded_files_objects = get_hashes_from_download(folder_name)
-    print("Finding matching hashes...")
+    log_and_print(log_file, "Retrieving hashes from '" + folder_name + "'... ", False)
+    downloaded_files_objects = get_hashes_from_download(folder_name, log_file)
+    log_and_print(log_file, "Done!")
+    log_and_print(log_file, "Finding matching hashes... ", False)
     hash_matches = hash_matching(downloaded_files_objects, master_list)
+    log_and_print(log_file, "Done!")
     if args.positive == True:
-        print("Performing positive hash...")
         positive_matches = positive_hashing(hash_matches)
         return positive_matches
     else:
-        print("Performing nagative hash...")
         negative_matches = negative_hashing(hash_matches)
         return negative_matches

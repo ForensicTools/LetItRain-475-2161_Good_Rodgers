@@ -71,13 +71,14 @@ def list_files(dbx, deleted, log_file):
                     except:
                         pass
     else:
-        log_and_print(log_file, "Retrieving list of regular files...")
+        log_and_print(log_file, "Retrieving list of regular files... ", False)
         dbx_list = dbx.files_list_folder('', recursive=True)
         file_list = dbx_list.entries
         while dbx_list.has_more:
             dbx.files_list_folder_continue(dbx_list.cursor)
             for entry in dbx_list.entries:
                 file_list.append(entry)
+        log_and_print(log_file, "Done!")
     return file_list
 
 

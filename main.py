@@ -59,11 +59,10 @@ def main():
         folder_name, file_list, deleted_file_list = gdrive.google_drive(timestamp, log_file)
     if args.positive:
         log_and_print(log_file, "Performing positive hashing...")
-        results = hashChecker.hash_checker(folder_name, args)
-        log_and_print(log_file, "Done!")
+        results = hash_checker.hash_checker(folder_name, args, log_file)
     elif args.negative:
         log_and_print(log_file, "Performing negative hashing...")
-        results = hashChecker.hash_checker(folder_name, args)
+        results = hash_checker.hash_checker(folder_name, args, log_file)
     else:
         results = []
     end_time = datetime.now()
