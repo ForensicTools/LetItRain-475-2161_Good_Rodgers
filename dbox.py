@@ -4,9 +4,13 @@ import hashlib
 import sys
 
 # Print something to the console and log it to the log file
-def log_and_print(log_file, log_entry):
-    log_file.write(log_entry + "\n")
-    print(log_entry)
+def log_and_print(log_file, log_entry, newline=True):
+    if newline:
+        log_file.write(log_entry + "\n")
+        print(log_entry)
+    else:
+        log_file.write(log_entry)
+        print(log_entry, end="", flush=True)
 
 # Authenticate with Dropbox and save the access token for future runs
 def auth(log_file):
@@ -200,7 +204,7 @@ def dbox(timestamp, log_file):
     if not dbx:
         log_and_print(log_file, "Could not authenticate to Dropbox. Please check your access token.")
         sys.exit()
-    log_and_print(log_file, "Sucessfully authenticated to Dropbox.")
+    log_and_print(log_file, "Sucessfully authenticated to Dropbox.\n")
     print("Would you like to attempt to download deleted files and their revisions?")
     print("WARNING: THIS WILL MODIFY THE DELETED FILES IN DROPBOX")
     print("In order to download deleted files, they must first be restored in Dropbox.")
@@ -209,7 +213,7 @@ def dbox(timestamp, log_file):
     print("We have to check each one to see if it is still recoverable.")
     print("If you would like to continue downloading deleted files, please enter 'Yes, I am sure'")
     confirm = input("Otherwise, just hit enter: ")
-    log_and_print(log_file, "Creating directories...")
+    log_and_print(log_file, "Creating directories... ", False)
     regular_dir, deleted_dir = create_dirs(timestamp)
     log_and_print(log_file, "Done!")
     file_list = list_files(dbx, False, log_file)
@@ -224,5 +228,4 @@ def dbox(timestamp, log_file):
         log_and_print(log_file, "Done!")
     else:
         log_and_print(log_file, "Skipping deleted files.")
-        log_and_print(log_file, "Done!")
     return "dbox_dump_" + timestamp, file_list, deleted_file_list

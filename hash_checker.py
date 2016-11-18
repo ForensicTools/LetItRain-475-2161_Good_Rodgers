@@ -55,7 +55,7 @@ def get_hashes_from_download(folder_name):
             master_hash_list = add_hashes_to_master_list(master_hash_list, hash_list)
         return master_hash_list
     else:
-        sys.exit("ERROR: Folder does not exist. Exitting...")
+        sys.exit("ERROR: Folder does not exist. Exiting...")
 
 # Concatenates the master_list and the new hash_list
 def add_hashes_to_master_list(master_list, hashes_to_add):

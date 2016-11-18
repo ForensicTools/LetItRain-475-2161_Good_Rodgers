@@ -3,10 +3,6 @@
 import os
 from file_object import FileObject
 
-def log_and_print(log_file, log_entry):
-    log_file.write(log_entry + "\n")
-    print(log_entry)
-
 # Write to the txt file the hashing results
 def write_to_report_file(results, folder_name, args, timestamp, run_time, file_list, deleted_file_list):
     report_file = open("{}/report.txt".format(folder_name), 'w')
@@ -55,5 +51,5 @@ def write_to_report_file(results, folder_name, args, timestamp, run_time, file_l
         report_file.write("{}\n".format(entry.name))
 
 # Main function for generating the report
-def generate_report(log_file, results, folder_name, args, timestamp, run_time, file_list, deleted_file_list):
+def generate_report(results, folder_name, args, timestamp, run_time, file_list, deleted_file_list):
     write_to_report_file(results, folder_name, args, timestamp, run_time, file_list, deleted_file_list)

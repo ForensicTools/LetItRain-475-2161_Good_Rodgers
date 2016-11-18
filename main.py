@@ -24,9 +24,13 @@ def create_log_file(timestamp):
     log_file = open("let_it_rain_" + timestamp + ".log", "w")
     return log_file
 
-def log_and_print(log_file, log_entry):
-    log_file.write(log_entry + "\n")
-    print(log_entry)
+def log_and_print(log_file, log_entry, newline=True):
+    if newline:
+        log_file.write(log_entry + "\n")
+        print(log_entry)
+    else:
+        log_file.write(log_entry)
+        print(log_entry, end="", flush=True)
 
 def main():
     timestamp = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
@@ -43,16 +47,20 @@ def main():
     args = parser.parse_args()
     input_parameter_test = error_check(args)
     log_file = create_log_file(timestamp)
-    log_and_print(log_file, "Time started: " + timestamp)
+    log_and_print(log_file, "\n#######################################")
+    log_and_print(log_file, "############## LetItRain ##############")
+    log_and_print(log_file, "#######################################\n")
+    log_and_print(log_file, "Time started: " + timestamp + "\n")
     if args.dropbox:
-        log_and_print(log_file, "Running Dropbox tool...")
+        log_and_print(log_file, "Running Dropbox tool...\n")
         folder_name, file_list, deleted_file_list = dbox.dbox(timestamp, log_file)
     else:
-        log_and_print(log_file, "Running Google Drive tool...")
+        log_and_print(log_file, "Running Google Drive tool...\n")
         folder_name, file_list, deleted_file_list = gdrive.google_drive(timestamp, log_file)
     if args.positive:
         log_and_print(log_file, "Performing positive hashing...")
         results = hashChecker.hash_checker(folder_name, args)
+        log_and_print(log_file, "Done!")
     elif args.negative:
         log_and_print(log_file, "Performing negative hashing...")
         results = hashChecker.hash_checker(folder_name, args)
@@ -61,8 +69,8 @@ def main():
     end_time = datetime.now()
     run_time = str(end_time - start_time)
     log_and_print(log_file, "Total run time: " + run_time)
-    log_and_print(log_file, "Generating report...")
-    report.generate_report(log_file, results, folder_name, args, timestamp, run_time, file_list, deleted_file_list)
+    log_and_print(log_file, "Generating report... ", False)
+    report.generate_report(results, folder_name, args, timestamp, run_time, file_list, deleted_file_list)
     log_and_print(log_file, "Done!")
     log_and_print(log_file, "Exiting...")
     log_file.close()
