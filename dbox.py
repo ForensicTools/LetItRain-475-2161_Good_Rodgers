@@ -163,6 +163,7 @@ def download_files(dbx, file_list, path, deleted, log_file):
                         hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
             else:
                 log_and_print(log_file, counter + " Skipping '" + file_entry.name + "' because it is a directory.")
+                file_list.remove(file_entry)
             progress += 1
 
 # Hash a given file in either SHA1, SHA256, or MD5
@@ -215,6 +216,7 @@ def dbox(timestamp, log_file):
     log_and_print(log_file, "Downloading all regular files into '" + regular_dir + "' ...")
     download_files(dbx, file_list, regular_dir, False, log_file)
     log_and_print(log_file, "Done!")
+    deleted_file_list = []
     if confirm == "Yes, I am sure":
         deleted_file_list = list_files(dbx, True, log_file)
         log_and_print(log_file, "Downloading all deleted files into '" + deleted_dir + "' ...")
@@ -223,4 +225,4 @@ def dbox(timestamp, log_file):
     else:
         log_and_print(log_file, "Skipping deleted files.")
         log_and_print(log_file, "Done!")
-    return "dbox_dump_" + timestamp
+    return "dbox_dump_" + timestamp, file_list, deleted_file_list

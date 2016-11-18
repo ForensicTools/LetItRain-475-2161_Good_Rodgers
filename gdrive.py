@@ -120,12 +120,14 @@ def download_files(gauth, httpauth, file_list, path, log_file):
         counter = "[" + str(progress).zfill(len(str(total))) + "/" + str(total) + "]"
         if check_revisions(httpauth, down_file['id']):
             if 'google-apps' in down_file['mimeType']:
-                export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file)
+                if not export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file):
+                    file_list.remove(down_file)
             else:
                 download_revisions(httpauth, down_file['id'], down_file['title'], path, counter, log_file)
         else:
             if 'google-apps' in down_file['mimeType']:
-                export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file)
+                if not export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_file):
+                    file_list.remove(down_file)
             else:
                 url = "https://www.googleapis.com/drive/v3/files/{}?alt=media".format(down_file['id'])
                 response, content = httpauth.request(url, 'GET')
@@ -159,12 +161,13 @@ def export_to_file(down_file, gdrive_file_type, httpauth, path, counter, log_fil
 
         with open(file_path, "wb") as saved_file:
             saved_file.write(content)
-        log_and_print(log_file, counter + " Hashing '" + name + "'...") #value[0] + "'...")
+        log_and_print(log_file, counter + " Hashing '" + name + value[0] + "'...") #value[0] + "'...")
         with open(path + "/_google/_hashes.txt", "a") as hashes_file:
             hashes_file.write(name + "\n")#value[0] + "\n")
             hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
             hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
             hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
+        return True
     else:
         log_and_print(log_file, counter + " Skipping '" + down_file['title'] + "' because it is an unsupported MIME type.")
 
@@ -225,4 +228,4 @@ def google_drive(timestamp, log_file):
     log_and_print(log_file, "Downloading all deleted files into '" + deleted_dir + "' ...")
     download_files(gauth, httpauth, deleted_file_list, deleted_dir, log_file)
     log_and_print(log_file, "Done!")
-    return "gdrive_dump_" + timestamp
+    return "gdrive_dump_" + timestamp, file_list, deleted_file_list
