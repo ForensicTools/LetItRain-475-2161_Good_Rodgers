@@ -56,7 +56,7 @@ def main():
     else:
         results = None
     log_and_print(log_file, "Generating report...")
-    report.generate_report(results, folder_name)
+    report.generate_report(results, folder_name, args)
     log_and_print(log_file, "Done!")
     log_and_print(log_file, "Exiting...")
     log_file.close()

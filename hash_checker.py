@@ -75,16 +75,16 @@ def collect_hashes(path):
         for line in hash_file:
             if count % 4 == 0:
                 hash_obj = FileObject()
-                hash_obj.set_name(line)
+                hash_obj.set_name(line.strip())
             if count % 4 == 1:
                 line_split = line.split(' ')
-                hash_obj.set_md5(line_split[1])
+                hash_obj.set_md5(line_split[1].strip())
             if count % 4 == 2:
                 line_split = line.split(' ')
-                hash_obj.set_sha1(line_split[1])
+                hash_obj.set_sha1(line_split[1].strip())
             if count % 4 == 3:
                 line_split = line.split(' ')
-                hash_obj.set_sha256(line_split[1])
+                hash_obj.set_sha256(line_split[1].strip())
                 hash_list.append(hash_obj)
             count = count + 1
         return hash_list
