@@ -54,7 +54,7 @@ def main():
         log_and_print(log_file, "Performing negative hashing...")
         results = hashChecker.hash_checker(folder_name, args)
     else:
-        results = None
+        results = []
     log_and_print(log_file, "Generating report...")
     report.generate_report(results, folder_name, args)
     log_and_print(log_file, "Done!")
