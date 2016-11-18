@@ -1,15 +1,15 @@
 # This file contains functions that use API calls for Google Drive
 # to aggregate data
 
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 import httplib2
 import json
 import os
 import hashlib
+import io
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 from apiclient import discovery
 from apiclient.http import MediaIoBaseDownload
-import io
 
 def log_and_print(log_file, log_entry, newline=True):
     if newline:
@@ -126,7 +126,7 @@ def sanitize_name(name):
 # Download files from drive when given the fileID
 def download_files(gauth, httpauth, service, file_list, path, log_file):
     total = len(file_list)
-    progress = 0
+    progress = 1
     drive = GoogleDrive(gauth)
     gdrive_file_type = make_hash_map()
     for down_file in file_list:
