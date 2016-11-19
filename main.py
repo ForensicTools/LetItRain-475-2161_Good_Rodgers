@@ -19,6 +19,15 @@ def error_check(args):
         sys.exit("ERROR: Please indicate Google Drive or Dropbox")
     if args.drive and args.dropbox:
         sys.exit("ERROR: Cannot perform Google Drive and Dropbox analysis. Pick one.")
+    if args.md5file != "None":
+        if not os.path.exists(args.md5file):
+            sys.exit("ERROR: Given file for MD5 hash matching doesn't exist!")
+    if args.sha1file != "None":
+        if not os.path.exists(args.sha1file):
+            sys.exit("ERROR: Given file for SHA1 hash matching doesn't exist!")
+    if args.sha256file != "None":
+        if not os.path.exists(args.sha256file):
+            sys.exit("ERROR: Given file for SHA256 hash matching doesn't exist!")
 
 def create_log_file(timestamp):
     log_file = open("let_it_rain_" + timestamp + ".log", "w")
