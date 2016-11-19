@@ -165,9 +165,10 @@ def download_files(gauth, httpauth, service, file_list, path, log_file):
                         hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
                         hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
                 except:
+                    fh.close()
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                    log_and_print(log_file, counter + "Failed to download '" + title + "'. The user most likely doesn't have permissions to export this file.")
+                    log_and_print(log_file, counter + " Failed to download '" + title + "'. The user most likely doesn't have permissions to export this file.")
         progress += 1
 
 def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter, log_file):
@@ -199,9 +200,10 @@ def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter
                 hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
             return True
         except:
+            fh.close()
             if os.path.exists(file_path):
                 os.remove(file_path)
-            log_and_print(log_file, counter + "Failed to download '" + name + "'. The user most likely doesn't have permissions to export this file.")
+            log_and_print(log_file, counter + " Failed to download '" + name + "'. The user most likely doesn't have permissions to export this file.")
 
     else:
         log_and_print(log_file, counter + " Skipping '" + down_file['title'] + "' because it is an unsupported MIME type.")
