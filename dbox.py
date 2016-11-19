@@ -64,9 +64,11 @@ def list_files(dbx, deleted, log_file):
         while dbx_list.has_more:
             for entry in dbx_list.entries:
                 if isinstance(entry, dropbox.files.DeletedMetadata):
+                    log_and_print(log_file, "Checking if '" + entry.path_display + "' can be restored...")
                     try:
                         revisions = dbx.files_list_revisions(entry.path_lower)
                         if len(revisions.entries) > 0:
+                            log_and_print(log_file, entry.path_display + "' can be restored. Adding it to the list of files to restore.")
                             file_list.append(entry)
                     except:
                         pass

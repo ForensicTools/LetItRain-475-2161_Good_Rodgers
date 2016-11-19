@@ -42,6 +42,11 @@ def log_and_print(log_file, log_entry, newline=True):
         print(log_entry, end="", flush=True)
 
 def main():
+    if os.name == "nt":
+        if sys.stdout.encoding != "cp65001":
+            print("Changing console codepage to UTF-8 to allow for UTF-8 filenames.")
+            os.system("chcp 65001")
+            sys.exit("Please restart the tool for the codepage change to take effect.")
     timestamp = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
     start_time = datetime.now()
     # Input argument parsing
