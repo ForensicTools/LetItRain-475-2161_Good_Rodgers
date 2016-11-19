@@ -2,20 +2,24 @@
 **Cloud Storage Positive/Negative Hashing**
 
 ## About
-This tool will take an account for a cloud storage provider (Google Drive, Dropbox, etc.) and download all available info (current files, deleted files, and file versions) from that provider. The data will be sorted into an easy-to-navigate directory structure, and both positive and negative hashing will be performed with a user-provided hash database. The tool will report with all matching "bad" hashes as well as which files can be safely ignored. Available metadata for each file will be downloaded and stored in an easily accessible format.
+This tool will take an account for a cloud storage provider (Google Drive, Dropbox, etc.) and download all available info (current files, deleted files, and file versions) from that provider. The data will be sorted into an easy-to-navigate directory structure, and both positive and negative hashing will be performed with a user-provided hash database. The tool will report with all matching "bad" hashes as well as which files can be safely ignored.
 
 ---
 
 ### Setting Up Your Environment
 There are a few initial steps that have to happen before using Let It Rain:
 
-1. Install PyDrive and Dropbox Python libraries
+1. Install PyDrive, Google Python Client, and Dropbox Python libraries
 2. Getting access to the provider's API
   * a. Google Drive
   * b. Dropbox
 3. Authorize the tool to interrogate the account
   * a. Google Drive
   * b. Dropbox
+4. Using the Tool
+  * a. Tool Arguments
+  * b. Example Let It Rain Run Commands
+  * c. Report and File Generation
 
 ---
 
@@ -26,6 +30,7 @@ This tool was built for Python 3. To install the dependencies using pip, run the
 ```
 pip3 install pydrive
 pip3 install dropbox
+pip3 install google-api-python-client
 ```
 
 
@@ -66,5 +71,40 @@ Similar to the Google Drive API, you must create an account and set up an app to
 * When you run the tool with a Dropbox account, it will ask you to enter in the app key and app secret which you should have saved from when you created the Dropbox app. Once you enter those, navigate to the URL it outputs.
 * Log into the account that you will be interrogating (it will ask you to log in first if you aren't already or you can log out and log into the correct account through the dropdown at the top right) and then click "Allow" to give the Dropbox app access to the account. It will then output an access token that will need to be pasted into the tool.
 * Once the access token is entered into the tool, it will then save it as "letitrain-creds-dbox.txt". If you receive any errors about being able to authenticate with Dropbox, make sure you delete that file before you try to authenticate again.
+
+**4a. Available Arguments for Running the Tool**
+
+* There are three types of arguments that can be passed into Let It Rain for processing:
+  * User-given files
+    * Files (.txt) given by the user that have all of the hashes to be tested. One hash per line.
+    * "--md5file <file>", "--sha1file <file>", "--sha256file <file>"
+  * Indication of Google Drive or Dropbox
+    * Indicates whether the user would like Let It Rain to interrogate a Google Drive or Dropbox account. Must specify one or the other.
+    * "--gdrive" or "--dropbox"
+  * Denote type of hashing interrogation
+    * Tells Let It Rain whether to perform positive or negative hashing. If no argument exists, then no hash matching will occur.
+    * "--positive", "--negative"
+
+**4b. Example Let It Rain Run Commands**
+
+Run positive hashing on a Dropbox account with a specified MD5 hash file:
+```
+python3 main.py --positive --dropbox --md5file md5.txt
+```
+
+Run negative hashing on a Google Drive account with SHA1 and SHA256 files:
+```
+python3 main.py --negative --gdrive --sha1file sha1.txt --sha256file sha256.txt
+```
+
+**4c. Report and File Generation**
+
+* Files are downloaded and arranged in an easy-to-navigate file structure:
+  * An initial folder is created with a timestamp that contains all of the information Let It Rain returns.
+  * Inside that folder, there is a 'deleted' and 'regular' folder. The 'deleted' folder contains all of the deleted files and revisions that Let It Rain could successfully download. The 'regular' folder has all the other files and revisions.
+  * If revisions for a file exist, a folder is created with the name of the document in question and all of the revisions are located inside of that folder.
+  * When Google Drive is being interrogated, there is an additional folder in both the 'deleted' and 'regular' folders, "_google", where specific Google Docs files are downloaded in a compatible format and saved in their own folder so the user knows those files were saved as Google proprietary files.
+* **NOTE: This tool will also download all shared files and folders from the interrogated Google Drive account that the user has the proper permissions to access.**
+* A report will be generated and placed in the main folder along with the 'deleted' and 'regular' folders. The report file will be named "report.txt". It will contain information such as the files names and hashes of the files that match the positive and negative hashing results.
 
 ---
