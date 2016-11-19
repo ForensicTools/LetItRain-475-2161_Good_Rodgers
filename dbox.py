@@ -212,7 +212,7 @@ def dbox(timestamp, log_file):
     print("After they are restored, they will be deleted again, adding a new revision to them.")
     print("This step may take a VERY LONG TIME if there are a lot of deleted files.")
     print("We have to check each one to see if it is still recoverable.")
-    print("If you would like to continue downloading deleted files, please enter 'Yes, I am sure'")
+    print("If you would like to continue downloading deleted files, please enter 'yes'.")
     confirm = input("Otherwise, just hit enter: ")
     log_and_print(log_file, "Creating directories... ", False)
     regular_dir, deleted_dir = create_dirs(timestamp)
@@ -222,7 +222,7 @@ def dbox(timestamp, log_file):
     download_files(dbx, file_list, regular_dir, False, log_file)
     log_and_print(log_file, "Done!")
     deleted_file_list = []
-    if confirm == "Yes, I am sure":
+    if confirm.lower() == "yes":
         deleted_file_list = list_files(dbx, True, log_file)
         log_and_print(log_file, "Downloading all deleted files into '" + deleted_dir + "' ...")
         download_files(dbx, deleted_file_list, deleted_dir, True, log_file)
