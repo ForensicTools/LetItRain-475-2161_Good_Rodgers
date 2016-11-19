@@ -84,6 +84,7 @@ def download_revisions(httpauth, service, fileID, title, path, counter, log_file
         while done is False:
             status, done = downloader.next_chunk()
             print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
+        fh.close()
         log_and_print(log_file, counter + " Hashing '" + title + ".rev" + str(rev_num) + "'...")
         with open(path + "/_hashes.txt", "a") as hashes_file:
             hashes_file.write(title + ".rev" + str(rev_num) + "\n")
@@ -111,7 +112,7 @@ def check_revisions(gauth, fileID):
         return False
 
 # sanitizes name to remove invalid characters
-def sanitize_name(name):
+def sanitize_name(name, include_period=True):
     name = name.replace('/', '_')
     name = name.replace(':', '_')
     name = name.replace('*', '_')
@@ -120,8 +121,9 @@ def sanitize_name(name):
     name = name.replace('|', '_')
     name = name.replace('<', '_')
     name = name.replace('"', '_')
-    name = name.replace('.', '_')
     new_name = name.replace('>', '_')
+    if include_period:
+        name = name.replace('.', '_')
     return new_name
 
 # Download files from drive when given the fileID
@@ -143,7 +145,7 @@ def download_files(gauth, httpauth, service, file_list, path, log_file):
                 if not export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter, log_file):
                     file_list.remove(down_file)
             else:
-                title = sanitize_name(down_file['title'])
+                title = sanitize_name(down_file['title'], False)
                 file_path = path + "/" + title
                 # to prevent duplicate file names being saved
                 if os.path.exists(file_path):
@@ -158,6 +160,7 @@ def download_files(gauth, httpauth, service, file_list, path, log_file):
                     while done is False:
                         status, done = downloader.next_chunk()
                         print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
+                    fh.close()
                     log_and_print(log_file, counter + " Hashing '" + title + "'...")
                     with open(path + "/_hashes.txt", "a") as hashes_file:
                         hashes_file.write(title + "\n")
@@ -192,6 +195,7 @@ def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter
             while done is False:
                 status, done = downloader.next_chunk()
                 print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
+            fh.close()
             log_and_print(log_file, counter + " Hashing '" + name + value[0] + "'...")
             with open(path + "/_google/_hashes.txt", "a") as hashes_file:
                 hashes_file.write(name + value[0] + "\n")
