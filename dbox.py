@@ -62,6 +62,7 @@ def list_files(dbx, deleted, log_file):
                 except:
                     pass
         while dbx_list.has_more:
+            dbx_list = dbx.files_list_folder_continue(dbx_list.cursor)
             for entry in dbx_list.entries:
                 if isinstance(entry, dropbox.files.DeletedMetadata):
                     log_and_print(log_file, "Checking if '" + entry.path_display + "' can be restored...")
@@ -77,7 +78,7 @@ def list_files(dbx, deleted, log_file):
         dbx_list = dbx.files_list_folder('', recursive=True)
         file_list = dbx_list.entries
         while dbx_list.has_more:
-            dbx.files_list_folder_continue(dbx_list.cursor)
+            dbx_list = dbx.files_list_folder_continue(dbx_list.cursor)
             for entry in dbx_list.entries:
                 file_list.append(entry)
         log_and_print(log_file, "Done!")
