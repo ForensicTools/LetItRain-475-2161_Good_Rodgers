@@ -98,6 +98,7 @@ def download_revisions(httpauth, service, fileID, title, path, counter, log_file
             saved_file.write("--Revision ID: " + item[1] + "\n")
             saved_file.write("--Revision Last Modifed: " + item[2] + "\n")
 
+# Check if there are revisions for a given fileID
 def check_revisions(gauth, fileID):
     httpauth = gauth
     url = "https://www.googleapis.com/drive/v3/files/" + fileID + "/revisions"
@@ -142,26 +143,29 @@ def download_files(gauth, httpauth, service, file_list, path, log_file):
                 if not export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter, log_file):
                     file_list.remove(down_file)
             else:
-                title = down_file['title']
+                title = sanitize_name(down_file['title'])
                 file_path = path + "/" + title
                 # to prevent duplicate file names being saved
                 if os.path.exists(file_path):
                     file_path, title = get_new_file_name(file_path)
                     log_and_print(log_file, counter + " File named '" + down_file['title'] + "' already exists. Saving as '" + title + "' instead.")
                 log_and_print(log_file, counter + " Downloading '" + title + "'...")
-                request = service.files().get_media(fileId=down_file['id'])
-                fh = io.FileIO(file_path, mode='wb')
-                downloader = MediaIoBaseDownload(fh, request)
-                done = False
-                while done is False:
-                    status, done = downloader.next_chunk()
-                    print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
-                log_and_print(log_file, counter + " Hashing '" + title + "'...")
-                with open(path + "/_hashes.txt", "a") as hashes_file:
-                    hashes_file.write(title + "\n")
-                    hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
-                    hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
-                    hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
+                try:
+                    request = service.files().get_media(fileId=down_file['id'])
+                    fh = io.FileIO(file_path, mode='wb')
+                    downloader = MediaIoBaseDownload(fh, request)
+                    done = False
+                    while done is False:
+                        status, done = downloader.next_chunk()
+                        print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
+                    log_and_print(log_file, counter + " Hashing '" + title + "'...")
+                    with open(path + "/_hashes.txt", "a") as hashes_file:
+                        hashes_file.write(title + "\n")
+                        hashes_file.write("--MD5: " + hash_file(file_path, "md5") + "\n")
+                        hashes_file.write("--SHA1: " + hash_file(file_path, "sha1") + "\n")
+                        hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
+                except:
+                    log_and_print(log_file, counter + "Failed to download '" + title + "'. The user most likely doesn't have permissions to export this file.")
         progress += 1
 
 def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter, log_file):
@@ -193,7 +197,7 @@ def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter
                 hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
             return True
         except:
-            log_and_print(log_file, "Failed to download '" + name + "'. The user most likely doesn't have permissions to export this file.")
+            log_and_print(log_file, counter + "Failed to download '" + name + "'. The user most likely doesn't have permissions to export this file.")
 
     else:
         log_and_print(log_file, counter + " Skipping '" + down_file['title'] + "' because it is an unsupported MIME type.")
