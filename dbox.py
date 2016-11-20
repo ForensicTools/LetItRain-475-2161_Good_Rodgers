@@ -57,7 +57,7 @@ def list_files(dbx, deleted, log_file):
                 try:
                     revisions = dbx.files_list_revisions(entry.path_lower)
                     if len(revisions.entries) > 0:
-                        log_and_print(log_file, entry.path_display + "' can be restored. Adding it to the list of files to restore.")
+                        log_and_print(log_file, "'" + entry.path_display + "' can be restored. Adding it to the list of files to restore.")
                         file_list.append(entry)
                 except:
                     pass
@@ -83,7 +83,6 @@ def list_files(dbx, deleted, log_file):
                 file_list.append(entry)
         log_and_print(log_file, "Done!")
     return file_list
-
 
 # Check if there are any revisions for a given file
 def check_revisions(dbx, file_entry):
