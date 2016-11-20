@@ -53,14 +53,14 @@ def write_to_report_file(results, folder_name, args, timestamp, run_time, file_l
     report_file.write("Regular Files Processed: {}\n".format(len(file_list)))
     if args.drive:
         for entry in file_list:
-            report_file.write("{}\n".format(down_file['title']))
+            report_file.write("{}\n".format(entry['title']))
     elif args.dropbox:
         for entry in file_list:
             report_file.write("{}\n".format(entry.name))
     report_file.write("\nDeleted Files Processed: {}\n".format(len(deleted_file_list)))
     if args.drive:
         for entry in deleted_file_list:
-            report_file.write("{}\n".format(down_file['title']))
+            report_file.write("{}\n".format(entry['title']))
     elif args.dropbox:
         for entry in deleted_file_list:
             report_file.write("{}\n".format(entry.name))

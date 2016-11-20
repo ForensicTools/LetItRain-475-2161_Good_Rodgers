@@ -227,7 +227,7 @@ def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter
 def get_new_file_name(file_path):
     file_count = 1
     if "." in file_path:
-        file_beginning, extension = file_path.split('.')
+        file_beginning, extension = file_path.rsplit('.', 1)
         while os.path.exists(file_beginning + str(file_count) + "." + extension):
             file_count = file_count + 1
         new_file_path = file_beginning + str(file_count) + "." + extension
