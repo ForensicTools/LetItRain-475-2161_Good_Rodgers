@@ -4,9 +4,13 @@ import hashlib
 import sys
 
 # Print something to the console and log it to the log file
-def log_and_print(log_file, log_entry):
-    log_file.write(log_entry + "\n")
-    print(log_entry)
+def log_and_print(log_file, log_entry, newline=True):
+    if newline:
+        log_file.write(log_entry + "\n")
+        print(log_entry)
+    else:
+        log_file.write(log_entry)
+        print(log_entry, end="", flush=True)
 
 # Authenticate with Dropbox and save the access token for future runs
 def auth(log_file):
@@ -53,29 +57,32 @@ def list_files(dbx, deleted, log_file):
                 try:
                     revisions = dbx.files_list_revisions(entry.path_lower)
                     if len(revisions.entries) > 0:
-                        log_and_print(log_file, entry.path_display + "' can be restored. Adding it to the list of files to restore.")
+                        log_and_print(log_file, "'" + entry.path_display + "' can be restored. Adding it to the list of files to restore.")
                         file_list.append(entry)
                 except:
                     pass
         while dbx_list.has_more:
+            dbx_list = dbx.files_list_folder_continue(dbx_list.cursor)
             for entry in dbx_list.entries:
                 if isinstance(entry, dropbox.files.DeletedMetadata):
+                    log_and_print(log_file, "Checking if '" + entry.path_display + "' can be restored...")
                     try:
                         revisions = dbx.files_list_revisions(entry.path_lower)
                         if len(revisions.entries) > 0:
+                            log_and_print(log_file, entry.path_display + "' can be restored. Adding it to the list of files to restore.")
                             file_list.append(entry)
                     except:
                         pass
     else:
-        log_and_print(log_file, "Retrieving list of regular files...")
+        log_and_print(log_file, "Retrieving list of regular files... ", False)
         dbx_list = dbx.files_list_folder('', recursive=True)
         file_list = dbx_list.entries
         while dbx_list.has_more:
-            dbx.files_list_folder_continue(dbx_list.cursor)
+            dbx_list = dbx.files_list_folder_continue(dbx_list.cursor)
             for entry in dbx_list.entries:
                 file_list.append(entry)
+        log_and_print(log_file, "Done!")
     return file_list
-
 
 # Check if there are any revisions for a given file
 def check_revisions(dbx, file_entry):
@@ -163,6 +170,7 @@ def download_files(dbx, file_list, path, deleted, log_file):
                         hashes_file.write("--SHA256: " + hash_file(file_path, "sha256") + "\n")
             else:
                 log_and_print(log_file, counter + " Skipping '" + file_entry.name + "' because it is a directory.")
+                file_list.remove(file_entry)
             progress += 1
 
 # Hash a given file in either SHA1, SHA256, or MD5
@@ -199,28 +207,28 @@ def dbox(timestamp, log_file):
     if not dbx:
         log_and_print(log_file, "Could not authenticate to Dropbox. Please check your access token.")
         sys.exit()
-    log_and_print(log_file, "Sucessfully authenticated to Dropbox.")
+    log_and_print(log_file, "Sucessfully authenticated to Dropbox.\n")
     print("Would you like to attempt to download deleted files and their revisions?")
     print("WARNING: THIS WILL MODIFY THE DELETED FILES IN DROPBOX")
     print("In order to download deleted files, they must first be restored in Dropbox.")
     print("After they are restored, they will be deleted again, adding a new revision to them.")
     print("This step may take a VERY LONG TIME if there are a lot of deleted files.")
     print("We have to check each one to see if it is still recoverable.")
-    print("If you would like to continue downloading deleted files, please enter 'Yes, I am sure'")
+    print("If you would like to continue downloading deleted files, please enter 'yes'.")
     confirm = input("Otherwise, just hit enter: ")
-    log_and_print(log_file, "Creating directories...")
+    log_and_print(log_file, "Creating directories... ", False)
     regular_dir, deleted_dir = create_dirs(timestamp)
     log_and_print(log_file, "Done!")
     file_list = list_files(dbx, False, log_file)
     log_and_print(log_file, "Downloading all regular files into '" + regular_dir + "' ...")
     download_files(dbx, file_list, regular_dir, False, log_file)
     log_and_print(log_file, "Done!")
-    if confirm == "Yes, I am sure":
+    deleted_file_list = []
+    if confirm.lower() == "yes":
         deleted_file_list = list_files(dbx, True, log_file)
         log_and_print(log_file, "Downloading all deleted files into '" + deleted_dir + "' ...")
         download_files(dbx, deleted_file_list, deleted_dir, True, log_file)
         log_and_print(log_file, "Done!")
     else:
         log_and_print(log_file, "Skipping deleted files.")
-        log_and_print(log_file, "Done!")
-    return "dbox_dump_" + timestamp
+    return "dbox_dump_" + timestamp, file_list, deleted_file_list
