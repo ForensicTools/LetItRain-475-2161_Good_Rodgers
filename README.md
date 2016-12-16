@@ -108,3 +108,8 @@ python3 main.py --negative --gdrive --sha1file sha1.txt --sha256file sha256.txt
 * A report will be generated and placed in the main folder along with the 'deleted' and 'regular' folders. The report file will be named "report.txt". It will contain information such as the files names and hashes of the files that match the positive and negative hashing results.
 
 ---
+
+## Resources
+[PyDrive](https://pythonhosted.org/PyDrive/)  
+[Google Drive Python Guide/Reference](https://developers.google.com/drive/v3/web/quickstart/python)   
+[Dropbox Python Library](http://dropbox-sdk-python.readthedocs.io/en/master/)

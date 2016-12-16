@@ -1,6 +1,7 @@
 # Contains report generation code
 
 import os
+import platform
 from file_object import FileObject
 
 # Write to the txt file the hashing results
@@ -12,6 +13,8 @@ def write_to_report_file(results, folder_name, args, timestamp, run_time, file_l
     report_file.write("###############\n")
     report_file.write("RUN INFORMATION\n")
     report_file.write("###############\n")
+    # Write OS info to report
+    report_file.write("OS: {}\n".format(str(platform.platform())))
     report_file.write("Folder name: {}\n".format(folder_name))
     report_file.write("Time started: {}\n".format(timestamp))
     report_file.write("Total run time: {}\n".format(run_time))
