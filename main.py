@@ -29,10 +29,12 @@ def error_check(args):
         if not os.path.exists(args.sha256file):
             sys.exit("ERROR: Given file for SHA256 hash matching doesn't exist!")
 
+# Create the log file with the timestamp
 def create_log_file(timestamp):
     log_file = open("let_it_rain_" + timestamp + ".log", "w")
     return log_file
 
+# Print something to the console and log it to the log file
 def log_and_print(log_file, log_entry, newline=True):
     if newline:
         log_file.write(log_entry + "\n")
@@ -43,6 +45,7 @@ def log_and_print(log_file, log_entry, newline=True):
 
 def main():
     if os.name == "nt":
+        # Fix for UTF-8 on Windows
         if sys.stdout.encoding != "cp65001":
             print("Changing console codepage to UTF-8 to allow for UTF-8 filenames.")
             os.system("chcp 65001")

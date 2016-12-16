@@ -11,6 +11,7 @@ from pydrive.drive import GoogleDrive
 from apiclient import discovery
 from apiclient.http import MediaIoBaseDownload
 
+# Print something to the console and log it to the log file
 def log_and_print(log_file, log_entry, newline=True):
     if newline:
         log_file.write(log_entry + "\n")
@@ -83,6 +84,7 @@ def download_revisions(httpauth, service, fileID, title, path, counter, log_file
         done = False
         while done is False:
             status, done = downloader.next_chunk()
+            # Print status of download (mainly for larger files)
             print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
         fh.close()
         log_and_print(log_file, counter + " Hashing '" + title + ".rev" + str(rev_num) + "'...")
@@ -159,6 +161,7 @@ def download_files(gauth, httpauth, service, file_list, path, log_file):
                     done = False
                     while done is False:
                         status, done = downloader.next_chunk()
+                        # Print status of download (mainly for larger files)
                         print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
                     fh.close()
                     log_and_print(log_file, counter + " Hashing '" + title + "'...")
@@ -199,6 +202,7 @@ def export_to_file(down_file, gdrive_file_type, httpauth, service, path, counter
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
+                # Print status of download (mainly for larger files)
                 print("%d%%\r" % int(status.progress() * 100), end="", flush=True)
             fh.close()
             log_and_print(log_file, counter + " Hashing '" + name + value[0] + "'...")
@@ -241,8 +245,8 @@ def get_new_file_name(file_path):
         title = file_name[-1] + str(file_count)
     return new_file_path, title
 
+# Hashes a file with a given algorithm and returns the hash value
 def hash_file(filename, alg):
-    # Hashes a file with a given algorithm and returns the hash value
     blsize = 65536
     if alg == "md5":
         hasher = hashlib.md5()
@@ -257,6 +261,7 @@ def hash_file(filename, alg):
             buf = hashfile.read(blsize)
     return hasher.hexdigest()
 
+# Create the directories that the tool will store the downloded files and generated reports
 def create_dirs(timestamp):
     if not os.path.exists("gdrive_dump_{}".format(timestamp)):
         os.makedirs("gdrive_dump_{}".format(timestamp))

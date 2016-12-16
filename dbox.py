@@ -173,9 +173,8 @@ def download_files(dbx, file_list, path, deleted, log_file):
                 file_list.remove(file_entry)
             progress += 1
 
-# Hash a given file in either SHA1, SHA256, or MD5
+# Hashes a file with a given algorithm and returns the hash value
 def hash_file(filename, alg):
-    # Hashes a file with a given algorithm and returns the hash value
     blsize = 65536
     if alg == "md5":
         hasher = hashlib.md5()
